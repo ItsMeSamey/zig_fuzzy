@@ -85,8 +85,8 @@ test LevenshteinDistance {
 /// Calculates the Optimal String Alignment (OSA) distance between two strings using a space-optimized approach.
 /// Implementation adapted from https://wikipedia.org/wiki/Damerau-Levenshtein_distance
 ///
-/// Time Complexity: O(n*m)
-/// Space Complexity: O(3 * min(n,m))
+/// Time Complexity: O(a * b)
+/// Space Complexity: O(3 * min(a, b))
 pub fn LevenshteinOSADistance(comptime I: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) !I {
   var a = a_;
   var b = b_;
@@ -205,8 +205,8 @@ test LevenshteinOSADistance {
 /// Calculates the Damerau-Levenshtein distance between two strings.
 /// Implementation from https://wikipedia.org/wiki/Damerau-Levenshtein_distance
 ///
-/// Time Complexity: O(n*m)
-/// Space Complexity: O(n*m)
+/// Time Complexity: O(a * b)
+/// Space Complexity: O(a * b)
 pub fn DamerauLevenshteinDistance(comptime I: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) !I {
   var a = a_;
   var b = b_;
