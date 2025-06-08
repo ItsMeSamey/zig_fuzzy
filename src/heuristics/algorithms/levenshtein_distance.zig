@@ -16,8 +16,7 @@ pub fn LevenshteinDistance(comptime I: type, a_: []const u8, b_: []const u8, all
 
   if (b.len == 0) return @intCast(a.len);
 
-  const buffer_size_in_usize = 2 * (b.len + 1);
-  var buf = try allocator.alloc(I, buffer_size_in_usize);
+  var buf = try allocator.alloc(I, 2 * (b.len + 1));
   defer allocator.free(buf);
 
   var v0: []I = buf[0 .. b.len + 1];
@@ -31,7 +30,7 @@ pub fn LevenshteinDistance(comptime I: type, a_: []const u8, b_: []const u8, all
     v1[0] = @intCast(i + 1);
 
     for (0..b.len) |j| {
-      var increment: usize = 0;
+      var increment: I = 0;
       if (a[i] != b[j]) { increment = 1; }
 
       v1[j+1] = @min(
@@ -52,11 +51,13 @@ pub fn LevenshteinDistance(comptime I: type, a_: []const u8, b_: []const u8, all
 }
 
 test LevenshteinDistance {
+  const I = u32;
+
   const Test = struct {
     name: []const u8,
     a: []const u8,
     b: []const u8,
-    expected: usize,
+    expected: I,
   };
 
   const tests = [_]Test{
@@ -77,7 +78,7 @@ test LevenshteinDistance {
   };
 
   inline for (tests) |tt| {
-    const actual = try LevenshteinDistance(usize, tt.a, tt.b, std.testing.allocator);
+    const actual = try LevenshteinDistance(I, tt.a, tt.b, std.testing.allocator);
     try std.testing.expectEqual(tt.expected, actual);
   }
 }
@@ -168,11 +169,13 @@ pub fn LevenshteinOSADistance(comptime I: type, a_: []const u8, b_: []const u8, 
 }
 
 test LevenshteinOSADistance {
+  const I = u32;
+
   const Test = struct {
     name: []const u8,
     a: []const u8,
     b: []const u8,
-    expected: usize,
+    expected: I,
   };
 
   const tests = [_]Test{
@@ -197,7 +200,7 @@ test LevenshteinOSADistance {
   };
 
   inline for (tests) |tt| {
-    const actual = try LevenshteinOSADistance(usize, tt.a, tt.b, std.testing.allocator);
+    const actual = try LevenshteinOSADistance(I, tt.a, tt.b, std.testing.allocator);
     try std.testing.expectEqual(tt.expected, actual);
   }
 }
@@ -302,11 +305,13 @@ pub fn DamerauLevenshteinDistance(comptime I: type, a_: []const u8, b_: []const 
 }
 
 test DamerauLevenshteinDistance {
+  const I = u32;
+
   const Test = struct {
     name: []const u8,
     a: []const u8,
     b: []const u8,
-    expected: usize,
+    expected: I,
   };
 
   const tests = [_]Test{
@@ -331,7 +336,7 @@ test DamerauLevenshteinDistance {
   };
 
   inline for (tests) |tt| {
-    const actual = try DamerauLevenshteinDistance(usize, tt.a, tt.b, std.testing.allocator);
+    const actual = try DamerauLevenshteinDistance(I, tt.a, tt.b, std.testing.allocator);
     try std.testing.expectEqual(tt.expected, actual);
   }
 }
