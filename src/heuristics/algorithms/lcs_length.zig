@@ -32,7 +32,7 @@ pub fn LCSLength(comptime I: type, a_: []const u8, b_: []const u8, allocator: st
       v1[j + 1] = if (a[i] == b[j]) v0[j] + 1 else @max(v0[j + 1], v1[j]);
     }
 
-    // Swap v0 and v1 slices by pointer update
+    // Swap v0 and v1
     const temp = v0;
     v0 = v1;
     v1 = temp;
@@ -40,5 +40,32 @@ pub fn LCSLength(comptime I: type, a_: []const u8, b_: []const u8, allocator: st
 
   // After the last swap, the results are in v0 (because they were swapped back).
   return v0[b.len];
+}
+
+test LCSLength {
+  const Test = struct {
+    name: []const u8,
+    a: []const u8,
+    b: []const u8,
+    expected: u32,
+  };
+
+  const tests = [_]Test{
+    .{ .name = "Empty strings", .a = "", .b = "", .expected = 0 },
+    .{ .name = "One empty string", .a = "AGGTAB", .b = "", .expected = 0 },
+    .{ .name = "Identical string", .a = "AGGTAB", .b = "AGGTAB", .expected = 6 },
+    .{ .name = "No common subsequence", .a = "ABC", .b = "DEF", .expected = 0 },
+    .{ .name = "Common subsequence at the beginning", .a = "ABCDEF", .b = "ABXYZ", .expected = 2 },
+    .{ .name = "Common subsequence at the end", .a = "XYZABC", .b = "UVWABC", .expected = 3 },
+    .{ .name = "Common subsequence in the middle", .a = "AXBYCZ", .b = "PBYQCR", .expected = 3 },
+    .{ .name = "Different lengths", .a = "AGGTAB", .b = "GXTXAYB", .expected = 4 },
+    .{ .name = "Another different lengths", .a = "ABCDGH", .b = "AEDFHR", .expected = 3 },
+    .{ .name = "Common subsequence with interleaving characters", .a = "ABCDE", .b = "ACE", .expected = 3 },
+  };
+
+  inline for (tests) |tt| {
+    const actual = LCSLength(u32, tt.a, tt.b, std.testing.allocator);
+    try std.testing.expectEqual(tt.expected, actual);
+  }
 }
 
