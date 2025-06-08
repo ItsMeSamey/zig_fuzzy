@@ -120,7 +120,9 @@ pub fn FrequencyDistance(comptime I: type, comptime F: type, a_: []const u8, b_:
     }
   }
 
-  return (distance_no_div + distance / norm_factor_inner) / @as(F, @floatFromInt(a.len + b.len));
+  const result = (distance_no_div + distance / norm_factor_inner) / @as(F, @floatFromInt(a.len + b.len));
+  std.debug.assert(result >= 0.0 and result <= 1.0);
+  return result;
 }
 
 test FrequencyDistance {
