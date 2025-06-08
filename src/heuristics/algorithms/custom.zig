@@ -161,7 +161,9 @@ test FrequencyDistance {
   };
 
   inline for (test_cases) |tc| {
-    std.debug.print("a: {s}, b: {s}, expected: {d}\n", .{ tc.a, tc.b, try FrequencyDistance(u32, f32, tc.a, tc.b, std.testing.allocator) });
+    const value = try FrequencyDistance(u32, f32, tc.a, tc.b, std.testing.allocator);
+    try std.testing.expect(value >= 0);
+    try std.testing.expect(value <= 1);
   }
 }
 
