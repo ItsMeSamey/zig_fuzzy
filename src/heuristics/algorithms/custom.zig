@@ -6,7 +6,7 @@ fn diff(comptime T: type, a: anytype, b: @TypeOf(a)) T {
   return @intCast(result);
 }
 
-/// A similarity measure that calculates a "Frequency Distance" between two strings.
+/// A dissimilarity measure that calculates a "Frequency Distance" between two strings.
 /// It attempts to quantify how "far apart" characters and their positions are across strings,
 /// especially when character frequencies differ.
 ///

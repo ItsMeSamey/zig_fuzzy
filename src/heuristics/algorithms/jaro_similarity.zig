@@ -7,7 +7,7 @@ const std = @import("std");
 ///
 /// Time Complexity = O(a * b)
 /// Space Complexity = O(a + b)
-pub fn JaroSimilarity(comptime F: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) !F {
+pub fn JaroSimilarity(comptime I: type, comptime F: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) !F {
   var a = a_;
   var b = b_;
 
@@ -41,7 +41,7 @@ pub fn JaroSimilarity(comptime F: type, a_: []const u8, b_: []const u8, allocato
   var b_matches: std.bit_set.DynamicBitSetUnmanaged = .{ .bit_length = a.len, .masks = allocation[a_count + 1 + 1..].ptr};
 
   const match_distance = a.len / 2 - 1;
-  var matches: usize = 0;
+  var matches: I = 0;
 
   // Find the number of matching characters.
   for (0..a.len) |i| {
@@ -61,8 +61,8 @@ pub fn JaroSimilarity(comptime F: type, a_: []const u8, b_: []const u8, allocato
   if (matches == 0) return 0.0;
 
   // Calculate the number of transpositions.
-  var transpositions: usize = 0;
-  var k: usize = 0;
+  var transpositions: I = 0;
+  var k: I = 0;
   for (0..a.len) |i| {
     if (a_matches.isSet(i)) {
       while (k < b.len and !b_matches.isSet(k)) {
@@ -106,7 +106,7 @@ test JaroSimilarity {
   };
 
   inline for (tests) |tt| {
-    const actual = try JaroSimilarity(f64, tt.a, tt.b, std.testing.allocator);
+    const actual = try JaroSimilarity(u32, f64, tt.a, tt.b, std.testing.allocator);
     try std.testing.expectApproxEqAbs(tt.expected, actual, 1e-9);
   }
 }
@@ -116,11 +116,11 @@ test JaroSimilarity {
 ///
 /// Time Complexity = O(a * b)
 /// Space Complexity = O(a + b)
-pub fn JaroWinklerSimilarity(comptime F: type, a: []const u8, b: []const u8, prefix_l: F, prefix_limit: usize, allocator: std.mem.Allocator) !F {
-  const jaro = try JaroSimilarity(F, a, b, allocator);
+pub fn JaroWinklerSimilarity(comptime I: type, comptime F: type, a: []const u8, b: []const u8, prefix_l: F, prefix_limit: I, allocator: std.mem.Allocator) !F {
+  const jaro = try JaroSimilarity(I, F, a, b, allocator);
 
   // Calculate the length of the matching prefix.
-  var prefix: usize = 0;
+  var prefix: I = 0;
   const common_len = @min(a.len, b.len);
   
   while (prefix < prefix_limit and prefix < common_len and a[prefix] == b[prefix]) {
@@ -148,7 +148,7 @@ test JaroWinklerSimilarity {
   };
 
   inline for (tests) |tt| {
-    const actual = try JaroWinklerSimilarity(f64, tt.a, tt.b, tt.l, std.math.maxInt(usize), std.testing.allocator);
+    const actual = try JaroWinklerSimilarity(u32, f64, tt.a, tt.b, tt.l, std.math.maxInt(u32), std.testing.allocator);
     try std.testing.expectApproxEqAbs(tt.expected, actual, 1e-9);
   }
 }
@@ -158,11 +158,11 @@ test JaroWinklerSimilarity {
 ///
 /// Time Complexity = O(a * b)
 /// Space Complexity = O(a + b)
-pub fn JaroWinklerSimilarityBidirectional(comptime F: type, a: []const u8, b: []const u8, prefix_l: F, prefix_limit: usize, suffix_l: F, suffix_limit: usize, allocator: std.mem.Allocator) !F {
-  const jaro_dist = try JaroSimilarity(F, a, b, allocator);
+pub fn JaroWinklerSimilarityBidirectional(comptime I: type, comptime F: type, a: []const u8, b: []const u8, prefix_l: F, prefix_limit: I, suffix_l: F, suffix_limit: I, allocator: std.mem.Allocator) !F {
+  const jaro_dist = try JaroSimilarity(I, F, a, b, allocator);
 
   // Calculate the length of the matching prefix.
-  var prefix: usize = 0;
+  var prefix: I = 0;
   const common_len_prefix = @min(a.len, b.len);
 
   while (prefix < prefix_limit and prefix < common_len_prefix and a[prefix] == b[prefix]) {
@@ -170,7 +170,7 @@ pub fn JaroWinklerSimilarityBidirectional(comptime F: type, a: []const u8, b: []
   }
 
   // Calculate the length of the matching suffix.
-  var suffix: usize = 0;
+  var suffix: I = 0;
   const common_len_suffix = common_len_prefix - prefix;
 
   while (suffix < suffix_limit and suffix < common_len_suffix and a[a.len - 1 - suffix] == b[b.len - 1 - suffix]) {
