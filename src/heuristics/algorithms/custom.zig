@@ -1,5 +1,6 @@
 const std = @import("std");
 
+/// A helper function for FrequencyDistance
 fn diff(comptime T: type, a: anytype, b: @TypeOf(a)) T {
   const result = if (a > b) a - b else b - a;
   if (@typeInfo(T) == .float) return @floatFromInt(result);

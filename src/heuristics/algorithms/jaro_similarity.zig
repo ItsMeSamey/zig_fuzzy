@@ -27,18 +27,12 @@ pub fn JaroSimilarity(comptime I: type, comptime F: type, a_: []const u8, b_: []
   const a_count = (a.len + maskIntSize - 1) / maskIntSize;
   const b_count = (b.len + maskIntSize - 1) / maskIntSize;
 
-  const allocation = try allocator.alloc(MaskInt, a_count + 1 + b_count + 1);
+  const allocation = try allocator.alloc(MaskInt, a_count + b_count);
   defer allocator.free(allocation);
-  allocation[0] = a_count;
-  allocation[a_count + 1] = b_count;
-  @memset(allocation[1..a_count + 1], 0);
-  @memset(allocation[a_count + 1 + 1..], 0);
+  @memset(allocation[0..a_count + b_count], 0);
 
-  std.debug.assert(allocation[0] == a_count);
-  std.debug.assert(allocation[a_count + 1] == b_count);
-
-  var a_matches: std.bit_set.DynamicBitSetUnmanaged = .{ .bit_length = a.len, .masks = allocation[1..].ptr};
-  var b_matches: std.bit_set.DynamicBitSetUnmanaged = .{ .bit_length = a.len, .masks = allocation[a_count + 1 + 1..].ptr};
+  var a_matches: std.bit_set.DynamicBitSetUnmanaged = .{ .bit_length = a.len, .masks = allocation[0..].ptr};
+  var b_matches: std.bit_set.DynamicBitSetUnmanaged = .{ .bit_length = b.len, .masks = allocation[a_count..].ptr};
 
   const match_distance = a.len / 2 - 1;
   var matches: I = 0;

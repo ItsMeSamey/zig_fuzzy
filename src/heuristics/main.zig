@@ -205,4 +205,7 @@ pub fn WrapTrim(f: SimilarityMeasure, prefix_l: comptime_float, prefix_limit: co
   };
 }
 
+test {
+  std.testing.refAllDeclsRecursive(@This());
+}
 
