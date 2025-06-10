@@ -3,6 +3,7 @@ const custom = @import("algorithms/custom.zig");
 const jaro_similarity = @import("algorithms/jaro_similarity.zig");
 const lcs_length = @import("algorithms/lcs_length.zig");
 const levenshtein_distance = @import("algorithms/levenshtein_distance.zig");
+const n_gram = @import("algorithms/n_gram.zig");
 
 pub const SimilarityMeasure = @TypeOf(struct {
   fn inner(comptime I: type, comptime F: type, a: []const u8, b: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!F {
@@ -74,6 +75,51 @@ pub fn LevenshteinDamerauSimilarityPercentage(comptime I: type, comptime F: type
   const max_len = @max(a.len, b.len);
   if (max_len == 0) return 1.0;
   return 1.0 - (@as(F, @floatFromInt(try levenshtein_distance.DamerauLevenshteinDistance(I, a, b, allocator))) / @as(F, @floatFromInt(max_len)));
+}
+
+/// Denotes the kind of "Gram" to use for Calculations
+pub const GramKind = enum(u1) { Occurrence, Frequency };
+
+/// Get Tversky Index
+///
+/// Time Complexity = O(a + b)
+/// Space Complexity = O(a + b)
+pub fn GetTverskyIndex(gram_count: comptime_int, gram_kind: GramKind, alpha: comptime_float, beta: comptime_float) SimilarityMeasure {
+  return struct {
+    fn inner(comptime I: type, comptime F: type, a: []const u8, b: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!F {
+      const GramGetterFn = switch (gram_kind) {
+        .Occurrence => n_gram.GetNGramExistence,
+        .Frequency => n_gram.GetNGramFrequency,
+      };
+
+      const GramGetter = GramGetterFn(I, gram_count, switch (gram_kind) {
+        .Occurrence => gram_count <= 2,
+        .Frequency => gram_count <= 1,
+      }, false);
+
+      var gram: GramGetter = .{};
+      defer gram.deinit(allocator);
+
+      const result: n_gram.CommonAll = try gram.getCommonAll(allocator, a, b);
+      return @as(F, @floatFromInt(result.common)) / ( @as(F, @floatFromInt(result.common)) + alpha * @as(F, @floatFromInt(result.a)) + beta * @as(F, @floatFromInt(result.b)) );
+    }
+  }.inner;
+}
+
+/// Jaccard Coefficient
+///
+/// Time Complexity = O(a * b)
+/// Space Complexity = O(a + b)
+pub fn JaccardSimilarity(gram_count: comptime_int, gram_kind: GramKind) SimilarityMeasure {
+  return GetTverskyIndex(gram_count, gram_kind, 1, 1);
+}
+
+/// Dice Coefficient
+///
+/// Time Complexity = O(a * b)
+/// Space Complexity = O(a + b)
+pub fn DiceSimilarity(gram_count: comptime_int, gram_kind: GramKind) SimilarityMeasure {
+  return GetTverskyIndex(gram_count, gram_kind, 0.5, 0.5);
 }
 
 /// Wrapper function that gives priority to strings that match from the beginning.
@@ -158,4 +204,5 @@ pub fn WrapTrim(f: SimilarityMeasure, prefix_l: comptime_float, prefix_limit: co
     }
   };
 }
+
 

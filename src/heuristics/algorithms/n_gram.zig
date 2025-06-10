@@ -1,9 +1,5 @@
 const std = @import("std");
 
-// n_gram_interface {
-//   pub fn increment()
-// }
-
 fn Int(array: anytype) std.meta.Int(.unsigned, @bitSizeOf(@TypeOf(array))) {
   return @bitCast(array);
 }
