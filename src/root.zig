@@ -13,15 +13,15 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
       return struct {
         strs: [][]const u8,
 
-        fn len(self: *const @This()) usize {
+        pub fn len(self: *const @This()) usize {
           return self.strs.len;
         }
 
-        fn get(self: *const @This(), index: usize) []const u8 {
+        pub fn get(self: *const @This(), index: usize) []const u8 {
           return self.strs[index];
         }
 
-        fn swap(self: *const @This(), a: usize, b: usize) void {
+        pub fn swap(self: *const @This(), a: usize, b: usize) void {
           std.mem.swap([]const u8, &self.strs[a], &self.strs[b]);
         }
       };
@@ -35,27 +35,33 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
         strs: T,
         scores: [*]F,
 
-        fn len(self: *const @This()) usize {
+        pub fn len(self: *const @This()) usize {
           return self.strs.len();
         }
 
-        fn getScore(self: *const @This(), index: usize) F {
+        pub fn getScore(self: *const @This(), index: usize) F {
+          std.debug.assert(index < self.len());
           return self.scores[index];
         }
 
-        fn swap(self: *const @This(), a: usize, b: usize) void {
+        pub fn swap(self: *const @This(), a: usize, b: usize) void {
+          std.debug.assert(a < self.len());
+          std.debug.assert(b < self.len());
           self.strs.swap(a, b);
+          std.mem.swap(F, &self.scores[a], &self.scores[b]);
         }
 
-        fn lessThan(self: *const @This(), a: usize, b: usize) bool {
-          return self.scores[a] < self.scores[b];
+        pub fn lessThan(self: *const @This(), a: usize, b: usize) bool {
+          std.debug.assert(a < self.len());
+          std.debug.assert(b < self.len());
+          return self.scores[a] > self.scores[b];
         }
       };
     }
 
     fn superContext(strs: anytype, costs: []F) SupercontextType(@TypeOf(strs)) {
       std.debug.assert(strs.len() == costs.len);
-      return .{ .strs = strs, .costs = undefined };
+      return .{ .strs = strs, .scores = costs.ptr };
     }
   };
 
@@ -63,6 +69,16 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
     /// Takes in 2 strings and returns the score as a result
     pub fn score(target: []const u8, str: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!F {
       return score_fn(I, F, target, str, allocator);
+    }
+
+    pub fn scoreAll(target: []const u8, strs: [][]const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error![]F {
+      return scoreAllContext(target, ContextUtils.arrayContext(strs), allocator);
+    }
+
+    pub fn scoreAllContext(target: []const u8, strs: anytype, allocator: std.mem.Allocator) std.mem.Allocator.Error![]F {
+      const list = try allocator.alloc(F, strs.len());
+      for (0..strs.len()) |i| list[i] = try score(target, strs.get(i), allocator);
+      return list;
     }
 
     /// Sorts all the strings in the given array with respect to the `target` string
@@ -76,7 +92,7 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
     ///   - `get(index: usize) []const u8`
     ///   - `swap(a: usize, b: usize) void`
     pub fn sortContext(target: []const u8, strs: anytype, allocator: std.mem.Allocator) std.mem.Allocator.Error!void {
-      const list = try allocator.alloc(F, strs.len());
+      const list = try scoreAllContext(target, strs, allocator);
       defer allocator.free(list);
 
       for (0..strs.len()) |i| list[i] = try score(target, strs.get(i), allocator);
@@ -133,16 +149,12 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
         (op.threshold == null and (op.target_len == null or op.target_len.?.max >= strs.len())) or
         (op.target_len != null and (op.target_len.?.min >= strs.len() or (op.target_len.?.max >= strs.len() and op.target_len.?.min == 0)))
       ) {
-        sortContext(target, strs, allocator);
+        try sortContext(target, strs, allocator);
         return strs.len();
       }
 
-      const list = try allocator.alloc(F, strs.len());
+      const list = try scoreAllContext(target, strs, allocator);
       defer allocator.free(list);
-
-      for (0..strs.len()) |i| {
-        list[i] = try score(target, strs.get(i), allocator);
-      }
 
       const result = getBounds(ContextUtils.superContext(strs, list), op);
 
@@ -161,7 +173,7 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
     fn getBounds(ctx: anytype, op: Options) usize {
       std.debug.assert(op.threshold != null or op.target_len != null);
 
-      const bounds = if (op.target_len) |bounds| bounds else .{ .min = 0, .max = ctx.len() };
+      const bounds = if (op.target_len) |bounds| bounds else Options.Bounds{ .min = 0, .max = ctx.len() };
       const min = bounds.min;
       const max = @min(bounds.max, ctx.len());
 
@@ -177,29 +189,25 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
       var threshold_max: F = 1;
       var threshold_max_strong = false;
 
-      var num_iters = std.math.log2(ctx.len()) * 2;
+      var num_iters = (std.math.log2(ctx.len()) << 1) | 0b11;
       // This is done to minimize the number of swaps
-      while (num_iters > 0): (num_iters -= 1) {
-        while (j > i) {
-          if (ctx.getScore(j) >= threshold) {
-            ctx.swap(i, j);
-            i += 1; j -= 1;
-            break;
-          } else {
-            j -= 1;
-          }
-        }
+      while (num_iters > 0) {
+        // std.debug.print("Iter: {s}\n\t{d}\n", .{ctx.strs.strs, ctx.scores[0..ctx.len()]});
+        while (j > i and ctx.getScore(i) >= threshold) { i += 1; }
+        while (j > i and ctx.getScore(j) < threshold) { j -= 1; }
+        ctx.swap(i, j);
+        i += 1; j -= 1;
 
-        while (j > i): (i += 1) {
-          if (ctx.getScore(i) < threshold) { break; }
-        }
-
-        if (i == j) {
-          if (ctx.getScore(i) >= threshold) i += 1;
+        if (i >= j) {
           i += 1;
-
+          num_iters -= 1;
+          // std.debug.print("threshold: {d}\n", .{threshold});
+          // std.debug.print("i = {}, j = {}\n", .{i, j});
           if (i <= max) {
+            // std.debug.print("Sorting from {d} to {d}\n", .{i_old, i});
+            // std.debug.print("Before: {s}\n\t{d}\n", .{ctx.strs.strs, ctx.scores[0..ctx.len()]});
             sort_fn(i_old, i, ctx);
+            // std.debug.print("After : {s}\n\t{d}\n", .{ctx.strs.strs, ctx.scores[0..ctx.len()]});
             if (i >= min) return i;
             // Need to lower threshold
             threshold_max = threshold;
@@ -235,6 +243,42 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
       sort_fn(i_old, ctx.len(), ctx);
       return ctx.len();
     }
+
+
   };
+}
+
+test {
+  std.testing.refAllDeclsRecursive(@This());
+}
+
+const testing = std.testing;
+test "GetSorter.sort basic functionality" {
+  const Sorter = GetSorter(usize, f64, heuristics.FrequencySimilarity, null);
+  const allocator = testing.allocator;
+
+  var strs = [_][]const u8{"banana", "appel", "apricot"};
+
+  try Sorter.sort("apple", &strs, allocator);
+  try testing.expectEqualStrings("appel", strs[0]);
+  try testing.expectEqualStrings("apricot", strs[1]);
+  try testing.expectEqualStrings("banana", strs[2]);
+}
+
+test "GetSorter.sortOptions with threshold" {
+  const Sorter = GetSorter(usize, f64, heuristics.FrequencySimilarity, null);
+  const allocator = testing.allocator;
+
+  var strs = [_][]const u8{"banana", "apple", "apxle", "apricot", "cherry"};
+
+  const sorted_count = try Sorter.sortOptions("apepl", &strs, allocator, .{
+    .threshold = 0.3,
+    .target_len = .{ .min = 3, .max = strs.len },
+  });
+
+  try testing.expect(sorted_count > 3);
+  try testing.expectEqualStrings("apple", strs[0]);
+  try testing.expectEqualStrings("apxle", strs[1]);
+  try testing.expectEqualStrings("apricot", strs[2]);
 }
 
