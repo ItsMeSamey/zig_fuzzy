@@ -5,7 +5,7 @@ const std = @import("std");
 ///
 /// Time Complexity = O(a * b)
 /// Space Complexity = O(2 * min(a, b))
-pub fn LCSLength(comptime I: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) !I {
+pub fn LCSLength(comptime I: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!I {
   var a = a_;
   var b = b_;
 

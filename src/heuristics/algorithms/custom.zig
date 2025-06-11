@@ -14,7 +14,7 @@ fn diff(comptime T: type, a: anytype, b: @TypeOf(a)) T {
 /// C=256 (alphabet size)
 /// Time complexity: O(a + b + C * log2(max(a, b)))
 /// Space complexity: O(a + b + C)
-pub fn FrequencyDistance(comptime I: type, comptime F: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) !F {
+pub fn FrequencyDistance(comptime I: type, comptime F: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!F {
   @setEvalBranchQuota(10_000);
   var a = a_;
   var b = b_;

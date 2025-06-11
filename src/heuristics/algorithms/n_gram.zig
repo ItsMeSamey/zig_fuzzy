@@ -19,7 +19,7 @@ pub fn GetNGramExistence(n: comptime_int, static: bool, count_total: bool) type 
     }
 
     /// Add a value to the set
-    pub fn add(self: *@This(), allocator: std.mem.Allocator, fragment: [n]u8) !void {
+    pub fn add(self: *@This(), allocator: std.mem.Allocator, fragment: [n]u8) std.mem.Allocator.Error!void {
       switch (static) {
         true => {
           if (static and count_total) {
@@ -51,7 +51,7 @@ pub fn GetNGramExistence(n: comptime_int, static: bool, count_total: bool) type 
     }
 
     /// Returns the number of fragments common to both strings
-    pub fn getCommon(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) !usize {
+    pub fn getCommon(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) std.mem.Allocator.Error!usize {
       for (0..a.len + (n - 1)) |i| {
         try self.add(allocator, a[i..][0..n].*);
       }
@@ -67,7 +67,7 @@ pub fn GetNGramExistence(n: comptime_int, static: bool, count_total: bool) type 
     }
 
     /// Returns the number of fragments common to both strings, and exclusive to each string
-    pub fn getCommonAll(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) !CommonAll {
+    pub fn getCommonAll(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) std.mem.Allocator.Error!CommonAll {
       for (0..a.len + (n - 1)) |i| {
         try self.add(allocator, a[i..][0..n].*);
       }
@@ -101,7 +101,7 @@ pub fn GetNGramExistence(n: comptime_int, static: bool, count_total: bool) type 
     }
 
     /// Dupe this struct
-    pub fn dupe(self: *@This(), allocator: std.mem.Allocator) !@This() {
+    pub fn dupe(self: *@This(), allocator: std.mem.Allocator) std.mem.Allocator.Error!@This() {
       return @This(){
         .set = switch (static) {
           true => self.set,
@@ -141,7 +141,7 @@ pub fn GetNGramFrequency(I: type, n: comptime_int, static: bool, count_total: bo
     }
 
     /// Add a value to the set
-    pub fn add(self: *@This(), allocator: std.mem.Allocator, fragment: [n]u8) !void {
+    pub fn add(self: *@This(), allocator: std.mem.Allocator, fragment: [n]u8) std.mem.Allocator.Error!void {
       if (static and count_total) self._total += 1;
       switch (static) {
         true => self.set[Int(fragment)] += 1,
@@ -186,7 +186,7 @@ pub fn GetNGramFrequency(I: type, n: comptime_int, static: bool, count_total: bo
     }
 
     /// Returns the number of fragments common to both strings
-    pub fn getCommon(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) !usize {
+    pub fn getCommon(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) std.mem.Allocator.Error!usize {
       for (0..a.len + (n - 1)) |i| {
         try self.add(allocator, a[i..][0..n].*);
       }
@@ -201,7 +201,7 @@ pub fn GetNGramFrequency(I: type, n: comptime_int, static: bool, count_total: bo
     }
 
     /// Returns the number of fragments common to both strings, and exclusive to each string
-    pub fn getCommonAll(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) !CommonAll {
+    pub fn getCommonAll(self: *@This(), allocator: std.mem.Allocator, a: []const u8, b: []const u8) std.mem.Allocator.Error!CommonAll {
       const common = try self.getCommon(allocator, a, b);
 
       return .{
@@ -220,7 +220,7 @@ pub fn GetNGramFrequency(I: type, n: comptime_int, static: bool, count_total: bo
     }
 
     /// Dupe this struct
-    pub fn dupe(self: *@This(), allocator: std.mem.Allocator) !@This() {
+    pub fn dupe(self: *@This(), allocator: std.mem.Allocator) std.mem.Allocator.Error!@This() {
       return @This(){
         .set = switch (static) {
           true => self.set,
