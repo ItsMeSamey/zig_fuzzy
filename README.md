@@ -77,7 +77,7 @@ pub fn main() !void {
   std.debug.print("Sorted (and filtered): {s}\n", .{candidates_slice[0..sorted_count]});
 }
 ```
-**Context variants**: there are Context variants available for all the functions in sorter for data types that are not slices / arrays but are indexable like one.
+**Context variants**: there are Context variants available for all the functions in sorter for data types that are not slices / arrays.
 
 ### String Representation
 All functions in this module expect and return strings in ascii format and not decoding is performed.
