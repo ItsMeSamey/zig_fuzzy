@@ -1,9 +1,18 @@
 const std = @import("std");
-const custom = @import("algorithms/custom.zig");
-const jaro_similarity = @import("algorithms/jaro_similarity.zig");
-const lcs_length = @import("algorithms/lcs_length.zig");
-const levenshtein_distance = @import("algorithms/levenshtein_distance.zig");
-const n_gram = @import("algorithms/n_gram.zig");
+
+pub const algorithms = struct {
+  pub const custom = @import("algorithms/custom.zig");
+  pub const jaro_similarity = @import("algorithms/jaro_similarity.zig");
+  pub const lcs_length = @import("algorithms/lcs_length.zig");
+  pub const levenshtein_distance = @import("algorithms/levenshtein_distance.zig");
+  pub const n_gram = @import("algorithms/n_gram.zig");
+};
+
+pub const custom = algorithms.custom;
+pub const jaro_similarity = algorithms.jaro_similarity;
+pub const lcs_length = algorithms.lcs_length;
+pub const levenshtein_distance = algorithms.levenshtein_distance;
+pub const n_gram = algorithms.n_gram;
 
 pub const SimilarityMeasure = @TypeOf(struct {
   fn inner(comptime I: type, comptime F: type, a: []const u8, b: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!F {

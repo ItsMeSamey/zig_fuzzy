@@ -1,5 +1,5 @@
 const std = @import("std");
-const heuristics = @import("heuristics/main.zig");
+pub const heuristics = @import("heuristics/main.zig");
 
 /// I is the integer type used for indexing, asserts that every string is less than std.math.maxInt(I), strs.len (length of strs array) can however be larger
 /// F is the float type used for scores, sorting uses an array of F (same size as strs)
@@ -8,7 +8,7 @@ const heuristics = @import("heuristics/main.zig");
 pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optional_sort_fn: ?fn (usize, usize, anytype) void) type {
   const sort_fn = optional_sort_fn orelse std.sort.pdqContext;
 
-  const ContextUtils = struct {
+  const ContextUtils_ = struct {
     fn ArrayContextType() type {
       return struct {
         strs: [][]const u8,
@@ -66,6 +66,8 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
   };
 
   return struct {
+    pub const ContextUtils = ContextUtils_;
+
     /// Takes in 2 strings and returns the score as a result
     pub fn score(target: []const u8, str: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!F {
       return score_fn(I, F, target, str, allocator);
