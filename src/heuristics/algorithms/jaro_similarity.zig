@@ -7,7 +7,7 @@ const std = @import("std");
 ///
 /// Time Complexity = O(a * b)
 /// Space Complexity = O(a + b)
-pub fn JaroSimilarity(comptime I: type, comptime F: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) !F {
+pub fn JaroSimilarity(comptime I: type, comptime F: type, a_: []const u8, b_: []const u8, allocator: std.mem.Allocator) std.mem.Allocator.Error!F {
   var a = a_;
   var b = b_;
 

@@ -27,7 +27,7 @@ pub fn FrequencySimilarity(comptime I: type, comptime F: type, a: []const u8, b:
 ///
 /// Time Complexity = O(a * b)
 /// Space Complexity = O(a + b)
-pub const JaroSimilarityWrapper = jaro_similarity.JaroSimilarity;
+pub const JaroSimilarity: SimilarityMeasure = jaro_similarity.JaroSimilarity;
 
 /// Returns a number between 0 and 1 that represents the percentage of the length of the longest common subsequence.
 ///
