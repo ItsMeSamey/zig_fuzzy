@@ -44,37 +44,37 @@ const std = @import("std");
 const fuzzy = @import("fuzzy");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+  var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+  defer _ = gpa.deinit();
+  const allocator = gpa.allocator();
 
-    const Sorter = fuzzy.GetSorter(
-        u32, f32,
-        fuzzy.heuristics.LevenshteinSimilarityPercentage,
-        null // Use default sorting algorithm (pdqContext)
-    );
+  const Sorter = fuzzy.GetSorter(
+    u32, f32,
+    fuzzy.heuristics.LevenshteinSimilarityPercentage,
+    null // Use default sorting algorithm (pdqContext)
+  );
 
-    const target = "apple";
-    var candidates = [_][]const u8{"aple", "application", "orange", "banana", "appel"};
-    var candidates_slice: [][]const u8 = &candidates;
+  const target = "apple";
+  var candidates = [_][]const u8{"aple", "application", "orange", "banana", "appel"};
+  var candidates_slice: [][]const u8 = &candidates;
 
-    std.debug.print("Unsorted: {s}\n", .{candidates_slice});
+  std.debug.print("Unsorted: {s}\n", .{candidates_slice});
 
-    // 2. Sorter.sort to sorts the whole slice in-place.
-    try Sorter.sort(target, candidates_slice, allocator);
-    // Whole slice is sorted in this case.
-    std.debug.print("Sorted: {s}\n", .{candidates_slice});
+  // 2. Sorter.sort to sorts the whole slice in-place.
+  try Sorter.sort(target, candidates_slice, allocator);
+  // Whole slice is sorted in this case.
+  std.debug.print("Sorted: {s}\n", .{candidates_slice});
 
-    // 2. Or use Sorter.sortOptions. Here, we only care about elements with similarity >= 0.3.
-    //    Same threshold value may result in different results for different algorithms.
-    const sorted_count = try Sorter.sortOptions(target, candidates_slice, allocator, .{
-        .threshold = 0.6,
-        .target_len = .{
-            .min = 2, // Atleast top 2 strings will be in their sorted position
-            .max = candidates_slice.len // No upper bound on number of sorted positions
-        },
-    });
-    std.debug.print("Sorted (and filtered): {s}\n", .{candidates_slice[0..sorted_count]});
+  // 2. Or use Sorter.sortOptions. Here, we only care about elements with similarity >= 0.3.
+  //  Same threshold value may result in different results for different algorithms.
+  const sorted_count = try Sorter.sortOptions(target, candidates_slice, allocator, .{
+    .threshold = 0.6,
+    .target_len = .{
+      .min = 2, // Atleast top 2 strings will be in their sorted position
+      .max = candidates_slice.len // No upper bound on number of sorted positions
+    },
+  });
+  std.debug.print("Sorted (and filtered): {s}\n", .{candidates_slice[0..sorted_count]});
 }
 ```
 **Context variants**: there are Context variants available for all the functions in sorter for data types that are not slices / arrays but are indexable like one.
