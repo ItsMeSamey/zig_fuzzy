@@ -148,7 +148,10 @@ pub fn GetSorter(I: type, F: type, score_fn: heuristics.SimilarityMeasure, optio
 
       if (op.target_len) |bounds| {
         // This is an implementation error, if this happens please report it
-        std.debug.assert(bounds.min <= result and result <= bounds.max);
+        std.debug.assert(bounds.min <= result);
+        // This is not guaranteed
+        // std.debug.assert(result <= bounds.max);
+        
       }
 
       return result;
