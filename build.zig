@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
   const target = b.standardTargetOptions(.{});
   const optimize = b.standardOptimizeOption(.{});
 
-  const fuzzy_module = b.addModule("httpz", .{
+  const fuzzy_module = b.addModule("fuzzy", .{
     .root_source_file = b.path("src/root.zig"),
   });
 

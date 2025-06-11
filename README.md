@@ -27,7 +27,7 @@ zig fetch --save "git+https://github.com/ItsMeSamey/zig_fuzzy#main"
 const exe = b.addExecutable(...);
 ...
 const fuzzy = b.dependency("fuzzy", .{ .target = target, .optimize = optimize });
-exe.root_module.addImport("fuzzy", httpz.module("fuzzy"));
+exe.root_module.addImport("fuzzy", fuzzy.module("fuzzy"));
 ```
 
 ## Usage
@@ -48,7 +48,7 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    const Sorter = string_algorithms.GetSorter(
+    const Sorter = fuzzy.GetSorter(
         u32, f32,
         fuzzy.heuristics.LevenshteinSimilarityPercentage,
         null // Use default sorting algorithm (pdqContext)
@@ -66,7 +66,7 @@ pub fn main() !void {
     std.debug.print("Sorted: {s}\n", .{candidates_slice});
 
     // 2. Or use Sorter.sortOptions. Here, we only care about elements with similarity >= 0.3.
-    //    Same threashold value may result in different results for different algorithms.
+    //    Same threshold value may result in different results for different algorithms.
     const sorted_count = try Sorter.sortOptions(target, candidates_slice, allocator, .{
         .threshold = 0.6,
         .target_len = .{
